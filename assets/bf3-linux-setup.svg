@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PLACEHOLDER application icon for bf3-linux-setup.
+
+  To ship a real icon: replace THIS file's contents with the final artwork
+  (keep the filename `assets/bf3-linux-setup.svg`) and rebuild — it is embedded
+  at compile time via include_str! in src/launcher.rs, so no code change is
+  needed. A square, self-contained SVG (no external refs) is expected.
+
+  Steam-dark palette to match the app skin: bg #1b2838, accent #66c0f4.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect x="4" y="4" width="120" height="120" rx="20" fill="#1b2838"/>
+  <rect x="4" y="4" width="120" height="120" rx="20" fill="none" stroke="#2a4055" stroke-width="4"/>
+  <text x="64" y="82" font-family="sans-serif" font-size="52" font-weight="bold"
+        text-anchor="middle" fill="#66c0f4">BF3</text>
+</svg>
