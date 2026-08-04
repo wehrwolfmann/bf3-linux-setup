@@ -113,8 +113,13 @@ pub fn punkbuster_latest_online() -> Option<u32> {
 
 /// Download the raw `pbsec.htm` text (latin-1 tolerant). `None` on failure.
 pub fn fetch_pbsec() -> Option<String> {
+    let timeout = Duration::from_secs(15);
     let resp = ureq::builder()
-        .timeout(Duration::from_secs(15))
+        .timeout(timeout)
+        // The connect phase has its own limit (default 30 s) that wins over the
+        // overall timeout, so it has to be capped explicitly — the launch
+        // wrapper must never stall the game behind a dead route.
+        .timeout_connect(timeout)
         .build()
         .get(PB_SEC_URL)
         .call()

@@ -26,7 +26,7 @@ works, and the User-Agent alone is not enough — Battlelog also inspects
 
 | Preference                      | Value                              |
 | ------------------------------- | ---------------------------------- |
-| `general.useragent.override`    | a current Windows Chrome/Edge UA   |
+| `general.useragent.override`    | a current Windows Chrome UA        |
 | `general.platform.override`     | `Win32`                            |
 | `general.oscpu.override`        | `Windows NT 10.0; Win64; x64`      |
 | `general.appversion.override`   | `5.0 (Windows)`                    |
@@ -34,6 +34,23 @@ works, and the User-Agent alone is not enough — Battlelog also inspects
 Each line we add is tagged with a `# bf3-linux-setup` marker, so re-running is
 idempotent (no duplicates) and removal only ever touches our own lines. The
 existing `user.js` is backed up to `user.js.bf3bak` before the first write.
+
+### The browser version is looked up, not frozen
+
+Since these overrides are **global**, the signature you get is the one every
+site sees — not just Battlelog. That matters, because a growing number of sites
+answer an outdated browser signature with a bare `403` and no explanation, and
+the cut-off moves up with every Chrome release. A User-Agent baked into the
+binary would fix Battlelog today and silently break other sites a year later.
+
+So the current stable Chrome version is read at run time from Google's public
+release catalogue (`versionhistory.googleapis.com`, no key, no account) and
+written into the signature — reduced to the `<major>.0.0.0` form Chrome itself
+reports. The tool tells you which version it used and whether it came from the
+catalogue or from the built-in fallback. If the lookup fails for any reason it
+falls back to the version compiled in, after a short timeout; nothing hangs and
+nothing aborts. The signature is plain Chrome with no `Edg/` suffix, so it never
+advertises an Edge build that does not match the Chrome one.
 
 ## Usage
 
@@ -109,6 +126,9 @@ binary alongside the source.
 
 - Firefox (native or Flatpak).
 - The Steam version of Battlefield 3 (AppID 1238820) with Proton.
+- OpenSSL 3 (`libssl.so.3`), used for the HTTPS version lookup and linked from
+  the system so it stays on your distribution's security updates. Present out of
+  the box on current distributions and on SteamOS.
 - For a full PunkBuster reinstall (rarely needed): `protontricks`. The tool
   prints the exact command if it detects a mismatch.
 

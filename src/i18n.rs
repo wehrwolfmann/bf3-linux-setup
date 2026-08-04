@@ -100,6 +100,9 @@ pub enum Key {
     // ── actions: User-Agent step ──────────────────────────────────
     HdrUa,
     NoFirefoxProfile,
+    CheckingChromeVersion,
+    ChromeVersionOnlineTmpl,   // {0} = chrome version
+    ChromeVersionFallbackTmpl, // {0} = chrome version
     OsSpoofWrittenTmpl,  // {0} = profile name
     NoDefaultProfile,
     FirefoxRunningRestart,
@@ -190,6 +193,9 @@ fn en(k: Key) -> &'static str {
         UnknownOptionTmpl => "Unknown option: {}",
         HdrUa => "[1] User-Agent for Battlelog",
         NoFirefoxProfile => "No Firefox profile found. Is Firefox installed?",
+        CheckingChromeVersion => "Looking up the current Chrome version in Google's public catalogue…",
+        ChromeVersionOnlineTmpl => "Browser signature: Chrome {} (current version, from Google's catalogue).",
+        ChromeVersionFallbackTmpl => "Could not reach Google's catalogue — using the built-in Chrome {}. It works, but a newer one would be safer: re-run this when you are online.",
         OsSpoofWrittenTmpl => "OS spoof (User-Agent/platform/oscpu) written: {}",
         NoDefaultProfile => "No default profile detected in profiles.ini.",
         FirefoxRunningRestart => "Firefox is running — RESTART it so the settings take effect.",
@@ -273,6 +279,9 @@ fn ru(k: Key) -> &'static str {
         UnknownOptionTmpl => "Неизвестный параметр: {}",
         HdrUa => "[1] User-Agent для Battlelog",
         NoFirefoxProfile => "Профиль Firefox не найден. Firefox установлен?",
+        CheckingChromeVersion => "Узнаю текущую версию Chrome в публичном каталоге Google…",
+        ChromeVersionOnlineTmpl => "Подпись браузера: Chrome {} (актуальная версия, из каталога Google).",
+        ChromeVersionFallbackTmpl => "Не удалось связаться с каталогом Google — беру встроенную версию Chrome {}. Работать будет, но со свежей надёжнее: запустите ещё раз, когда появится сеть.",
         OsSpoofWrittenTmpl => "Подмена ОС (User-Agent/platform/oscpu) записана: {}",
         NoDefaultProfile => "В profiles.ini не найден профиль по умолчанию.",
         FirefoxRunningRestart => "Firefox запущен — ПЕРЕЗАПУСТИТЕ его, чтобы настройки вступили в силу.",

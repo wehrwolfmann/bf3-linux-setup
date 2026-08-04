@@ -2,7 +2,8 @@
 //! of tagged lines plus an overall [`Status`], mirroring the reference Python's
 //! Reporter-driven flow so terminal and GUI stay in lock-step.
 
-use crate::consts::BF3_APPID;
+use crate::consts::{windows_ua, BF3_APPID};
+use crate::firefox::VersionSource;
 use crate::i18n::{t, tf, Key};
 use crate::{firefox, punkbuster};
 use std::path::Path;
@@ -74,10 +75,21 @@ pub fn do_ua(log: &mut Log) -> Status {
         log.warn(t(Key::NoFirefoxProfile));
         return Status::Warn;
     }
+    // The signature has to name a browser version the wider web still accepts:
+    // an outdated one is answered with a bare 403 on more and more sites, so a
+    // frozen number would fix Battlelog and quietly break everything else.
+    log.info(t(Key::CheckingChromeVersion));
+    let (chrome_version, source) = firefox::chrome_ua_version();
+    match source {
+        VersionSource::Online => log.ok(tf(Key::ChromeVersionOnlineTmpl, &[&chrome_version])),
+        VersionSource::Fallback => log.warn(tf(Key::ChromeVersionFallbackTmpl, &[&chrome_version])),
+    }
+    let ua = windows_ua(&chrome_version);
+
     let mut touched = 0;
     for base in &bases {
         for prof in firefox::default_profiles(base) {
-            firefox::set_ua(&prof);
+            firefox::set_ua(&prof, &ua);
             let name = prof.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
             log.ok(tf(Key::OsSpoofWrittenTmpl, &[&name]));
             touched += 1;
