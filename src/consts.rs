@@ -54,6 +54,15 @@ pub fn windows_ua(chrome_version: &str) -> String {
 /// Windows. A per-site UA override was removed from Firefox in v71 and no
 /// longer works; and UA alone is not enough because Battlelog also reads
 /// navigator.platform / oscpu / appVersion — hence all four, applied globally.
+/// Names of the four preferences above, without their values. Removal needs
+/// only the names, and needs them without asking the network for a User-Agent.
+pub const UA_PREF_KEYS: [&str; 4] = [
+    "general.useragent.override",
+    "general.platform.override",
+    "general.oscpu.override",
+    "general.appversion.override",
+];
+
 pub fn ua_prefs(windows_ua: &str) -> [(&'static str, &str); 4] {
     [
         ("general.useragent.override", windows_ua),

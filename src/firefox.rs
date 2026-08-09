@@ -3,6 +3,7 @@
 
 use crate::consts::{
     ua_prefs, CHROME_VERSION_FALLBACK, CHROME_VERSION_TIMEOUT_SECS, CHROME_VERSION_URL, MARKER,
+    UA_PREF_KEYS,
 };
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -131,8 +132,52 @@ fn read_user_js(user_js: &Path) -> Vec<String> {
     }
 }
 
+/// Name of the pref a `user_pref("key", …)` line sets, if the line is one.
+fn pref_key(line: &str) -> Option<&str> {
+    let rest = line.trim_start().strip_prefix("user_pref")?;
+    let rest = rest.trim_start().strip_prefix('(')?;
+    let rest = rest.trim_start().strip_prefix('"')?;
+    rest.split('"').next()
+}
+
+/// Drop our lines from `user.js`. Recognition is by pref NAME rather than by
+/// the trailing marker: the marker is easily lost when the file is edited by
+/// hand, and then removal silently does nothing while the spoof stays on and
+/// breaks unrelated sites. The marker is still honoured for files written by
+/// older versions.
 fn strip_our_lines(lines: Vec<String>) -> Vec<String> {
-    lines.into_iter().filter(|l| !l.contains(MARKER)).collect()
+    lines
+        .into_iter()
+        .filter(|l| {
+            !l.contains(MARKER)
+                && !pref_key(l).is_some_and(|k| UA_PREF_KEYS.contains(&k))
+        })
+        .collect()
+}
+
+/// Drop our prefs from `prefs.js`, returning how many were removed. Without
+/// this, removal is pointless: `user.js` re-applies a pref on every start, but
+/// its VALUE lives in `prefs.js` and outlives the deleted line. Firefox
+/// rewrites `prefs.js` on exit, so this is only meaningful while it is closed.
+fn strip_prefs_js(profile: &Path) -> usize {
+    let prefs = profile.join("prefs.js");
+    let Ok(text) = fs::read_to_string(&prefs) else {
+        return 0;
+    };
+    let mut kept = Vec::new();
+    let mut removed = 0usize;
+    for line in text.lines() {
+        if pref_key(line).is_some_and(|k| UA_PREF_KEYS.contains(&k)) {
+            removed += 1;
+        } else {
+            kept.push(line);
+        }
+    }
+    if removed > 0 {
+        let _ = fs::copy(&prefs, prefs.with_extension("js.bf3bak"));
+        let _ = fs::write(&prefs, format!("{}\n", kept.join("\n")));
+    }
+    removed
 }
 
 fn write_user_js(user_js: &Path, lines: &[String]) {
@@ -252,17 +297,20 @@ pub fn set_ua(profile: &Path, windows_ua: &str) {
     write_user_js(&user_js, &lines);
 }
 
-/// Remove our marker-tagged lines from `user.js`. Returns true if anything was
-/// removed.
+/// Remove our prefs from `user.js`, and from `prefs.js` too when Firefox is
+/// closed. Returns true if anything was removed.
 pub fn unset_ua(profile: &Path) -> bool {
     let user_js = profile.join("user.js");
     let lines = read_user_js(&user_js);
     let stripped = strip_our_lines(lines.clone());
-    if stripped.len() == lines.len() {
-        return false;
+    let mut changed = stripped.len() != lines.len();
+    if changed {
+        write_user_js(&user_js, &stripped);
     }
-    write_user_js(&user_js, &stripped);
-    true
+    if !firefox_running() {
+        changed |= strip_prefs_js(profile) > 0;
+    }
+    changed
 }
 
 /// Whether a Firefox process is currently running (a restart is needed for the
@@ -497,5 +545,55 @@ Path=only.profile
         let major: u32 = v.split('.').next().unwrap().parse().unwrap();
         assert!(major >= 151, "unexpectedly low online Chrome version: {v}");
         assert!(v.ends_with(".0.0.0"), "not in reported form: {v}");
+    }
+
+    /// A hand-edited `user.js` loses the trailing marker; removal must still
+    /// recognise our prefs by name. This is the case that silently left the
+    /// spoof switched on while the program reported nothing to remove.
+    #[test]
+    fn unset_ua_removes_unmarked_prefs() {
+        let prof = temp_dir("prof3");
+        let user_js = prof.join("user.js");
+        fs::write(
+            &user_js,
+            concat!(
+                "// bf3-linux-setup — comments a human added\n",
+                "user_pref(\"general.useragent.override\", \"Mozilla/5.0 (Windows NT 10.0)\");\n",
+                "user_pref(\"general.platform.override\", \"Win32\");\n",
+                "user_pref(\"general.oscpu.override\", \"Windows NT 10.0; Win64; x64\");\n",
+                "user_pref(\"general.appversion.override\", \"5.0 (Windows)\");\n",
+                "user_pref(\"browser.foo\", true);\n",
+            ),
+        )
+        .unwrap();
+        assert!(unset_ua(&prof), "unmarked prefs were not recognised");
+        let after = fs::read_to_string(&user_js).unwrap();
+        assert!(!after.contains("useragent.override"), "spoof survived");
+        assert!(after.contains("browser.foo"), "foreign pref lost");
+        assert!(after.contains("// bf3-linux-setup"), "comment lost");
+        let _ = fs::remove_dir_all(&prof);
+    }
+
+    /// The value outlives the deleted `user.js` line, so `prefs.js` has to be
+    /// cleaned too — otherwise Firefox keeps spoofing after a restart.
+    #[test]
+    fn prefs_js_cleanup_removes_only_our_keys() {
+        let prof = temp_dir("prof4");
+        fs::write(
+            prof.join("prefs.js"),
+            concat!(
+                "user_pref(\"general.useragent.override\", \"Mozilla/5.0 (Windows NT 10.0)\");\n",
+                "user_pref(\"general.platform.override\", \"Win32\");\n",
+                "user_pref(\"browser.startup.page\", 3);\n",
+            ),
+        )
+        .unwrap();
+        assert_eq!(strip_prefs_js(&prof), 2);
+        let after = fs::read_to_string(prof.join("prefs.js")).unwrap();
+        assert!(!after.contains("general."), "our prefs survived");
+        assert!(after.contains("browser.startup.page"), "foreign pref lost");
+        assert!(prof.join("prefs.js.bf3bak").is_file(), "no backup written");
+        assert_eq!(strip_prefs_js(&prof), 0, "second run should be a no-op");
+        let _ = fs::remove_dir_all(&prof);
     }
 }

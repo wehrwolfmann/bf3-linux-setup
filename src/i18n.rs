@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn tf_leaves_no_placeholder_when_args_supplied() {
-        assert_eq!(tf(Key::GameTmpl, &["/games/bf3"]).contains("{}"), false);
+        assert!(!tf(Key::GameTmpl, &["/games/bf3"]).contains("{}"));
         assert!(tf(Key::GameTmpl, &["/games/bf3"]).contains("/games/bf3"));
     }
 }
