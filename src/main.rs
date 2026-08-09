@@ -63,6 +63,28 @@ fn main() -> ExitCode {
             render_terminal(&log);
             ExitCode::SUCCESS
         }
+        // Same as the GUI's "Add to app menu" button, for people who install
+        // the released binary from a terminal and never open the window.
+        Some("--install-launcher") => {
+            let home = launcher::home_dir();
+            let exe = std::path::PathBuf::from(launcher::current_exe_string());
+            let mut log = Log::new();
+            match launcher::install(&home, &exe) {
+                Ok(paths) => {
+                    log.ok(tf(
+                        Key::LauncherInstalledTmpl,
+                        &[&paths.desktop.display().to_string()],
+                    ));
+                    render_terminal(&log);
+                    ExitCode::SUCCESS
+                }
+                Err(e) => {
+                    log.warn(tf(Key::LauncherFailedTmpl, &[&e]));
+                    render_terminal(&log);
+                    ExitCode::from(1)
+                }
+            }
+        }
         Some(other) => {
             eprintln!("{}", tf(Key::UnknownOptionTmpl, &[other]));
             print_usage();

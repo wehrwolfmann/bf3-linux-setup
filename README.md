@@ -34,6 +34,21 @@ works, and the User-Agent alone is not enough — Battlelog also inspects
 Each line we add is tagged with a `# bf3-linux-setup` marker, so re-running is
 idempotent (no duplicates) and removal only ever touches our own lines. The
 existing `user.js` is backed up to `user.js.bf3bak` before the first write.
+Removal does not depend on that marker, though: the four preferences are also
+recognised by name, so a `user.js` you edited by hand — comments added, marker
+gone — is still cleaned up correctly. The values are cleared from `prefs.js`
+as well, because a preference written by `user.js` keeps its stored value even
+after the line is deleted. `prefs.js` is only touched while Firefox is closed;
+if it is running, the tool says so and asks you to close it and try again.
+
+> **The spoof is global, and other sites see it too.** While it is on, Firefox
+> tells every site it is Chrome on Windows, and a Gecko browser claiming to be
+> Chrome does not always survive a bot check — expect the occasional site that
+> 403s you or loops forever on a Cloudflare "verify you are human" page. Press
+> **Remove spoof** when you are done playing; it is one click and one Firefox
+> restart. Keeping the UA version current (the tool fetches the latest stable
+> Chrome version) avoids the other half of the problem: sites that reject
+> browsers claiming to be an outdated Chrome.
 
 ### The browser version is looked up, not frozen
 
@@ -58,6 +73,7 @@ advertises an Edge build that does not match the Chrome one.
 bf3-linux-setup                        open the setup window (default)
 bf3-linux-setup --setup                run the setup in the terminal
 bf3-linux-setup --ua-off               remove the Firefox overrides
+bf3-linux-setup --install-launcher     add it to the application menu
 bf3-linux-setup --steam-launch -- CMD  launch wrapper (see below)
 bf3-linux-setup --help                 show this help
 ```

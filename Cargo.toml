@@ -1,6 +1,6 @@
 [package]
 name = "bf3-linux-setup"
-version = "1.0.0"
+version = "1.2.0"
 edition = "2021"
 authors = ["Wehrwolfmann"]
 description = "Set up Battlefield 3 (Steam/Proton) for Battlelog on Linux: Firefox OS spoof + PunkBuster refresh."

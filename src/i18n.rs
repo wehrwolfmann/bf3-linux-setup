@@ -187,6 +187,7 @@ fn en(k: Key) -> &'static str {
              bf3-linux-setup                       open the setup window (default)\n  \
              bf3-linux-setup --setup               run the setup in the terminal\n  \
              bf3-linux-setup --ua-off              remove the Firefox OS spoof\n  \
+             bf3-linux-setup --install-launcher    add it to the application menu\n  \
              bf3-linux-setup --steam-launch -- CMD launch wrapper (put in Steam launch options)\n  \
              bf3-linux-setup --help                this help",
         GuiOpenFailedTmpl => "Could not open the GUI ({}). Try --setup for the terminal version.",
