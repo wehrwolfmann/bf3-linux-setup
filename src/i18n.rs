@@ -274,6 +274,7 @@ fn ru(k: Key) -> &'static str {
              bf3-linux-setup                       открыть окно настройки (по умолчанию)\n  \
              bf3-linux-setup --setup               выполнить настройку в терминале\n  \
              bf3-linux-setup --ua-off              убрать подмену ОС в Firefox\n  \
+             bf3-linux-setup --install-launcher    добавить в меню приложений\n  \
              bf3-linux-setup --steam-launch -- CMD обёртка запуска (для параметров запуска Steam)\n  \
              bf3-linux-setup --help                эта справка",
         GuiOpenFailedTmpl => "Не удалось открыть графический интерфейс ({}). Попробуйте --setup для терминальной версии.",
