@@ -148,6 +148,11 @@ binary alongside the source.
 - For a full PunkBuster reinstall (rarely needed): `protontricks`. The tool
   prints the exact command if it detects a mismatch.
 
+## Contributing
+
+Contributions are accepted under the [Contributor License Agreement](CLA.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose a change.
+
 ## License
 
 MIT.
