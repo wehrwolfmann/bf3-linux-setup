@@ -1,0 +1,12 @@
+bf3-linux-setup
+Copyright 2026 Alexander Berg ("Wehrwolfmann")
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+bf3-linux-setup is an independent project. It is not affiliated with, endorsed
+by or sponsored by Electronic Arts, DICE, Valve or Mozilla. "Battlefield",
+"Battlelog", "PunkBuster", "Steam" and "Firefox" are trademarks of their
+respective owners.
+
+Third-party Rust crates used to build the binary are fetched by Cargo under
+their own licenses (see Cargo.lock) and are not part of this repository.

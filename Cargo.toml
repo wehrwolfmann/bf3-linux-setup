@@ -4,7 +4,7 @@ version = "1.2.0"
 edition = "2021"
 authors = ["Wehrwolfmann"]
 description = "Set up Battlefield 3 (Steam/Proton) for Battlelog on Linux: Firefox OS spoof + PunkBuster refresh."
-license = "MIT"
+license = "Apache-2.0"
 
 [[bin]]
 name = "bf3-linux-setup"
